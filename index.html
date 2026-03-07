@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Filez</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px;
+    color: #333; background: #fff; }
+  h1 { margin-bottom: 24px; }
+  h2 { margin: 24px 0 12px; font-size: 1.1em; color: #666; }
+
+  .upload-area {
+    border: 2px dashed #ccc; border-radius: 8px; padding: 40px; text-align: center;
+    cursor: pointer; transition: border-color 0.2s;
+  }
+  .upload-area:hover, .upload-area.dragover { border-color: #666; }
+  .upload-area input { display: none; }
+  .upload-area p { color: #888; }
+
+  .file-list { list-style: none; }
+  .file-list li {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid #eee;
+  }
+  .file-list a { color: #0066cc; text-decoration: none; }
+  .file-list a:hover { text-decoration: underline; }
+
+  .empty { color: #999; font-style: italic; }
+  .status { margin-top: 12px; font-size: 0.9em; color: #666; }
+
+  @media (prefers-color-scheme: dark) {
+    body { background: #1a1a1a; color: #e0e0e0; }
+    h2 { color: #aaa; }
+    .upload-area { border-color: #444; }
+    .upload-area:hover, .upload-area.dragover { border-color: #888; }
+    .upload-area p { color: #888; }
+    .file-list li { border-bottom-color: #333; }
+    .file-list a { color: #5ca0e0; }
+    .empty { color: #666; }
+    .status { color: #999; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Filez</h1>
+
+<div class="upload-area" id="upload-area">
+  <p>Click or drag a file here to upload</p>
+  <input type="file" id="file-input">
+</div>
+<div class="status" id="status"></div>
+
+<h2>Available Files</h2>
+<ul class="file-list" id="file-list">
+  <li class="empty">No files available</li>
+</ul>
+
+<script>
+const uploadArea = document.getElementById('upload-area');
+const fileInput = document.getElementById('file-input');
+const status = document.getElementById('status');
+const fileList = document.getElementById('file-list');
+
+uploadArea.addEventListener('click', () => fileInput.click());
+uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+uploadArea.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadArea.classList.remove('dragover');
+  if (e.dataTransfer.files.length) upload(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', () => { if (fileInput.files.length) upload(fileInput.files[0]); });
+
+async function upload(file) {
+  status.textContent = 'Uploading ' + file.name + '...';
+  const form = new FormData();
+  form.append('file', file);
+  try {
+    const res = await fetch('/upload', { method: 'POST', body: form });
+    if (!res.ok) throw new Error(await res.text());
+    status.textContent = file.name + ' uploaded.';
+    fileInput.value = '';
+    loadFiles();
+  } catch (err) {
+    status.textContent = 'Upload failed: ' + err.message;
+  }
+}
+
+async function loadFiles() {
+  try {
+    const res = await fetch('/files');
+    const data = await res.json();
+    if (!data.length) {
+      fileList.innerHTML = '<li class="empty">No files available</li>';
+      return;
+    }
+    fileList.innerHTML = data.map(f =>
+      '<li><span>' + esc(f.name) + '</span><a href="/download/' + f.id + '">Download</a></li>'
+    ).join('');
+  } catch (err) {
+    fileList.innerHTML = '<li class="empty">Failed to load files</li>';
+  }
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+loadFiles();
+</script>
+</body>
+</html>
