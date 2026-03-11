@@ -21,11 +21,10 @@ The server listens on `:8080` by default. Configure with env vars:
 ## Docker
 
 ```sh
-docker buildx build -t filez .
-# or use docker-compose.yml
+./stable.sh       # builds multi-arch (amd64/arm64) and pushes d3v01d/filez:stable
 ```
 
-`stable.sh` builds and pushes multi-arch image to `d3v01d/filez:stable`.
+A `docker-compose.yml` is provided for running the published image.
 
 ## Architecture
 
