@@ -97,9 +97,18 @@ async function loadFiles() {
       fileList.innerHTML = '<li class="empty">No files available</li>';
       return;
     }
-    fileList.innerHTML = data.map(f =>
-      '<li><span>' + esc(f.name) + '</span><a href="/download/' + f.id + '">Download</a></li>'
-    ).join('');
+    fileList.innerHTML = '';
+    data.forEach(f => {
+      const li = document.createElement('li');
+      const span = document.createElement('span');
+      span.textContent = f.name;
+      const a = document.createElement('a');
+      a.href = '/download/' + f.id;
+      a.textContent = 'Download';
+      a.addEventListener('click', () => setTimeout(loadFiles, 500));
+      li.append(span, a);
+      fileList.append(li);
+    });
   } catch (err) {
     fileList.innerHTML = '<li class="empty">Failed to load files</li>';
   }
