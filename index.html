@@ -105,7 +105,7 @@ async function loadFiles() {
       const a = document.createElement('a');
       a.href = '/download/' + f.id;
       a.textContent = 'Download';
-      a.addEventListener('click', () => setTimeout(loadFiles, 500));
+      a.addEventListener('click', () => setTimeout(loadFiles, 2000));
       li.append(span, a);
       fileList.append(li);
     });
@@ -121,6 +121,7 @@ function esc(s) {
 }
 
 loadFiles();
+setInterval(loadFiles, 5000);
 </script>
 </body>
 </html>
